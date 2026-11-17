@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0f1729">
+<script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem("bu_theme"))||"dark"}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Übersetzer">
 <title>Bayazit Übersetzer</title>
@@ -78,14 +79,27 @@ textarea::placeholder{color:#5d6b8c}
 .net.on{background:#0f2e1d;color:#4ade80}
 .net.off{background:#3a1414;color:#fca5a5}
 .ki{display:block;text-align:center;margin-top:12px;padding:12px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;text-decoration:none;font-weight:600}
+
+[data-theme=light]{--bg:#f3f6fc;--card:#ffffff;--card2:#e8eef9;--line:#d3dcec;--txt:#14203a;--mut:#5b6884;--acc2:#2563eb;--okbg:#e7f8ee}
+[data-theme=light] textarea::placeholder{color:#9aa6bf}
+[data-theme=light] .out.empty{color:#9aa6bf}
+[data-theme=light] .fix{border-color:#9fdcb7}
+[data-theme=light] .fix .better{color:#14532d}
+[data-theme=light] .phr button.sos{background:#fdecec;border-color:#f3b4b4}
+[data-theme=light] .banner{background:#fff4e0;border-color:#f3c77a;color:#7a4b00}
+[data-theme=light] .net.on{background:#e7f8ee;color:#15803d}
+[data-theme=light] .net.off{background:#fdecec;color:#b91c1c}
+.theme{width:40px;height:40px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:19px;cursor:pointer;margin-left:auto}
+.net+.theme{margin-left:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="logo">🌍</div>
-    <h1>Bayazit Übersetzer<small>Sprechen oder tippen · korrigiert automatisch · 7 Sprachen</small></h1>
+    <h1>Bayazit Übersetzer<small>Sprechen oder tippen · korrigiert automatisch · 17 Sprachen</small></h1>
     <span class="net on" id="net">● Online</span>
+    <button class="theme" id="theme" title="Hell">☀️</button>
   </header>
 
   <div class="tabs">
@@ -130,7 +144,7 @@ textarea::placeholder{color:#5d6b8c}
 
     <div class="box">
       <div class="lbl"><span id="dstLbl">Übersetzung</span></div>
-      <div class="out empty" id="out">Die Übersetzung erscheint hier.</div>
+      <div class="out empty" id="out" dir="auto">Die Übersetzung erscheint hier.</div>
       <div class="row" style="margin-top:10px">
         <button class="btn p" id="speak">🔊 Vorlesen</button>
         <button class="btn" id="copy">📋 Kopieren</button>
@@ -158,7 +172,7 @@ textarea::placeholder{color:#5d6b8c}
 
 <div class="show-mode" id="showMode">
   <div class="s1" id="sm1"></div>
-  <div class="s2" id="sm2"></div>
+  <div class="s2" id="sm2" dir="auto"></div>
   <div class="s3" id="sm3"></div>
   <div class="bar">
     <button class="p" id="smSpeak">🔊 Vorlesen</button>
@@ -168,35 +182,45 @@ textarea::placeholder{color:#5d6b8c}
 
 <script>
 const LANG = {
-  de:{n:"Deutsch",f:"🇩🇪",v:"de-DE",lt:"de-DE"},
-  tr:{n:"Türkisch",f:"🇹🇷",v:"tr-TR",lt:null},
-  en:{n:"Englisch",f:"🇬🇧",v:"en-GB",lt:"en-GB"},
-  fr:{n:"Französisch",f:"🇫🇷",v:"fr-FR",lt:"fr"},
-  it:{n:"Italienisch",f:"🇮🇹",v:"it-IT",lt:"it"},
-  es:{n:"Spanisch",f:"🇪🇸",v:"es-ES",lt:"es"},
-  pl:{n:"Polnisch",f:"🇵🇱",v:"pl-PL",lt:"pl-PL"}
+  de:{n:"Deutsch",f:"🇩🇪",v:"de-DE",lt:"de-DE",api:"de"},
+  tr:{n:"Türkisch",f:"🇹🇷",v:"tr-TR",lt:null,api:"tr"},
+  en:{n:"Englisch",f:"🇬🇧",v:"en-GB",lt:"en-GB",api:"en"},
+  fr:{n:"Französisch",f:"🇫🇷",v:"fr-FR",lt:"fr",api:"fr"},
+  it:{n:"Italienisch",f:"🇮🇹",v:"it-IT",lt:"it",api:"it"},
+  es:{n:"Spanisch",f:"🇪🇸",v:"es-ES",lt:"es",api:"es"},
+  pl:{n:"Polnisch",f:"🇵🇱",v:"pl-PL",lt:"pl-PL",api:"pl"},
+  zh:{n:"Chinesisch",f:"🇨🇳",v:"zh-CN",lt:"zh-CN",api:"zh-CN",p:"Chinesisch (vereinfachte Schriftzeichen, Mandarin)"},
+  ro:{n:"Rumänisch",f:"🇷🇴",v:"ro-RO",lt:"ro-RO",api:"ro"},
+  da:{n:"Dänisch",f:"🇩🇰",v:"da-DK",lt:"da-DK",api:"da"},
+  sv:{n:"Schwedisch",f:"🇸🇪",v:"sv-SE",lt:"sv",api:"sv"},
+  fi:{n:"Finnisch",f:"🇫🇮",v:"fi-FI",lt:null,api:"fi"},
+  no:{n:"Norwegisch",f:"🇳🇴",v:"nb-NO",lt:"no",api:"no"},
+  nl:{n:"Niederländisch",f:"🇳🇱",v:"nl-NL",lt:"nl",api:"nl"},
+  hr:{n:"Kroatisch",f:"🇭🇷",v:"hr-HR",lt:null,api:"hr"},
+  hu:{n:"Ungarisch",f:"🇭🇺",v:"hu-HU",lt:null,api:"hu"},
+  ma:{n:"Marokkanisch",f:"🇲🇦",v:"ar-MA",lt:null,api:"ar",p:"Marokkanisches Arabisch (Darija), in arabischer Schrift"}
 };
 const PHR = [
-  {sos:1,de:"Hilfe!",tr:"İmdat!",en:"Help!",fr:"Au secours !",it:"Aiuto!",es:"¡Socorro!",pl:"Pomocy!"},
-  {sos:1,de:"Ich brauche einen Arzt.",tr:"Bir doktora ihtiyacım var.",en:"I need a doctor.",fr:"J'ai besoin d'un médecin.",it:"Ho bisogno di un medico.",es:"Necesito un médico.",pl:"Potrzebuję lekarza."},
-  {sos:1,de:"Bitte rufen Sie einen Krankenwagen.",tr:"Lütfen bir ambulans çağırın.",en:"Please call an ambulance.",fr:"Appelez une ambulance, s'il vous plaît.",it:"Chiami un'ambulanza, per favore.",es:"Llame a una ambulancia, por favor.",pl:"Proszę wezwać karetkę."},
-  {sos:1,de:"Rufen Sie die Polizei!",tr:"Polisi arayın!",en:"Call the police!",fr:"Appelez la police !",it:"Chiami la polizia!",es:"¡Llame a la policía!",pl:"Proszę wezwać policję!"},
-  {sos:1,de:"Ich hatte einen Unfall.",tr:"Kaza geçirdim.",en:"I had an accident.",fr:"J'ai eu un accident.",it:"Ho avuto un incidente.",es:"He tenido un accidente.",pl:"Miałem wypadek."},
-  {sos:1,de:"Mein Kind ist krank.",tr:"Çocuğum hasta.",en:"My child is sick.",fr:"Mon enfant est malade.",it:"Mio figlio è malato.",es:"Mi hijo está enfermo.",pl:"Moje dziecko jest chore."},
-  {de:"Wo ist das nächste Krankenhaus?",tr:"En yakın hastane nerede?",en:"Where is the nearest hospital?",fr:"Où est l'hôpital le plus proche ?",it:"Dov'è l'ospedale più vicino?",es:"¿Dónde está el hospital más cercano?",pl:"Gdzie jest najbliższy szpital?"},
-  {de:"Wo ist die nächste Apotheke?",tr:"En yakın eczane nerede?",en:"Where is the nearest pharmacy?",fr:"Où est la pharmacie la plus proche ?",it:"Dov'è la farmacia più vicina?",es:"¿Dónde está la farmacia más cercana?",pl:"Gdzie jest najbliższa apteka?"},
-  {de:"Ich habe hier Schmerzen.",tr:"Buram ağrıyor.",en:"It hurts here.",fr:"J'ai mal ici.",it:"Mi fa male qui.",es:"Me duele aquí.",pl:"Boli mnie tutaj."},
-  {de:"Ich habe eine Allergie.",tr:"Alerjim var.",en:"I have an allergy.",fr:"J'ai une allergie.",it:"Ho un'allergia.",es:"Tengo una alergia.",pl:"Mam alergię."},
-  {de:"Ich habe mich verlaufen.",tr:"Kayboldum.",en:"I am lost.",fr:"Je suis perdu.",it:"Mi sono perso.",es:"Estoy perdido.",pl:"Zgubiłem się."},
-  {de:"Man hat mir mein Portemonnaie gestohlen.",tr:"Cüzdanım çalındı.",en:"My wallet has been stolen.",fr:"On m'a volé mon portefeuille.",it:"Mi hanno rubato il portafoglio.",es:"Me han robado la cartera.",pl:"Ukradziono mi portfel."},
-  {de:"Sprechen Sie Deutsch oder Englisch?",tr:"Almanca ya da İngilizce konuşuyor musunuz?",en:"Do you speak German or English?",fr:"Parlez-vous allemand ou anglais ?",it:"Parla tedesco o inglese?",es:"¿Habla alemán o inglés?",pl:"Czy mówi Pan po niemiecku albo po angielsku?"},
-  {de:"Bitte sprechen Sie langsam.",tr:"Lütfen yavaş konuşun.",en:"Please speak slowly.",fr:"Parlez lentement, s'il vous plaît.",it:"Parli lentamente, per favore.",es:"Hable despacio, por favor.",pl:"Proszę mówić wolno."},
-  {de:"Ich verstehe nicht.",tr:"Anlamıyorum.",en:"I don't understand.",fr:"Je ne comprends pas.",it:"Non capisco.",es:"No entiendo.",pl:"Nie rozumiem."},
-  {de:"Bringen Sie mich bitte zu dieser Adresse.",tr:"Lütfen beni bu adrese götürün.",en:"Please take me to this address.",fr:"Emmenez-moi à cette adresse, s'il vous plaît.",it:"Mi porti a questo indirizzo, per favore.",es:"Lléveme a esta dirección, por favor.",pl:"Proszę mnie zawieźć pod ten adres."},
-  {de:"Wo ist die Toilette?",tr:"Tuvalet nerede?",en:"Where is the toilet?",fr:"Où sont les toilettes ?",it:"Dov'è il bagno?",es:"¿Dónde está el baño?",pl:"Gdzie jest toaleta?"},
-  {de:"Ich brauche Wasser.",tr:"Suya ihtiyacım var.",en:"I need water.",fr:"J'ai besoin d'eau.",it:"Ho bisogno di acqua.",es:"Necesito agua.",pl:"Potrzebuję wody."},
-  {de:"Wie viel kostet das?",tr:"Bu ne kadar?",en:"How much does this cost?",fr:"Combien ça coûte ?",it:"Quanto costa?",es:"¿Cuánto cuesta?",pl:"Ile to kosztuje?"},
-  {de:"Danke für Ihre Hilfe!",tr:"Yardımınız için teşekkür ederim!",en:"Thank you for your help!",fr:"Merci pour votre aide !",it:"Grazie per il suo aiuto!",es:"¡Gracias por su ayuda!",pl:"Dziękuję za pomoc!"}
+  {sos:1,de:"Hilfe!",tr:"İmdat!",en:"Help!",fr:"Au secours !",it:"Aiuto!",es:"¡Socorro!",pl:"Pomocy!",zh:"救命！",ro:"Ajutor!",da:"Hjælp!",sv:"Hjälp!",fi:"Apua!",no:"Hjelp!",nl:"Help!",hr:"Upomoć!",hu:"Segítség!",ma:"عتقوني!"},
+  {sos:1,de:"Ich brauche einen Arzt.",tr:"Bir doktora ihtiyacım var.",en:"I need a doctor.",fr:"J'ai besoin d'un médecin.",it:"Ho bisogno di un medico.",es:"Necesito un médico.",pl:"Potrzebuję lekarza.",zh:"我需要看医生。",ro:"Am nevoie de un medic.",da:"Jeg har brug for en læge.",sv:"Jag behöver en läkare.",fi:"Tarvitsen lääkärin.",no:"Jeg trenger en lege.",nl:"Ik heb een dokter nodig.",hr:"Trebam liječnika.",hu:"Orvosra van szükségem.",ma:"محتاج طبيب."},
+  {sos:1,de:"Bitte rufen Sie einen Krankenwagen.",tr:"Lütfen bir ambulans çağırın.",en:"Please call an ambulance.",fr:"Appelez une ambulance, s'il vous plaît.",it:"Chiami un'ambulanza, per favore.",es:"Llame a una ambulancia, por favor.",pl:"Proszę wezwać karetkę.",zh:"请叫救护车。",ro:"Vă rog, chemați o ambulanță.",da:"Ring venligst efter en ambulance.",sv:"Ring efter en ambulans, tack.",fi:"Soittakaa ambulanssi, kiitos.",no:"Vennligst ring etter en ambulanse.",nl:"Bel alstublieft een ambulance.",hr:"Molim vas, pozovite hitnu pomoć.",hu:"Kérem, hívjon mentőt!",ma:"عافاك عيّط على الإسعاف."},
+  {sos:1,de:"Rufen Sie die Polizei!",tr:"Polisi arayın!",en:"Call the police!",fr:"Appelez la police !",it:"Chiami la polizia!",es:"¡Llame a la policía!",pl:"Proszę wezwać policję!",zh:"请报警！",ro:"Chemați poliția!",da:"Ring til politiet!",sv:"Ring polisen!",fi:"Soittakaa poliisi!",no:"Ring politiet!",nl:"Bel de politie!",hr:"Zovite policiju!",hu:"Hívja a rendőrséget!",ma:"عيّط على البوليس!"},
+  {sos:1,de:"Ich hatte einen Unfall.",tr:"Kaza geçirdim.",en:"I had an accident.",fr:"J'ai eu un accident.",it:"Ho avuto un incidente.",es:"He tenido un accidente.",pl:"Miałem wypadek.",zh:"我出了事故。",ro:"Am avut un accident.",da:"Jeg har været ude for en ulykke.",sv:"Jag har råkat ut för en olycka.",fi:"Olen joutunut onnettomuuteen.",no:"Jeg har vært ute for en ulykke.",nl:"Ik heb een ongeluk gehad.",hr:"Imao sam nesreću.",hu:"Balesetem volt.",ma:"وقعات ليا حادثة."},
+  {sos:1,de:"Mein Kind ist krank.",tr:"Çocuğum hasta.",en:"My child is sick.",fr:"Mon enfant est malade.",it:"Mio figlio è malato.",es:"Mi hijo está enfermo.",pl:"Moje dziecko jest chore.",zh:"我的孩子生病了。",ro:"Copilul meu este bolnav.",da:"Mit barn er sygt.",sv:"Mitt barn är sjukt.",fi:"Lapseni on sairas.",no:"Barnet mitt er sykt.",nl:"Mijn kind is ziek.",hr:"Moje dijete je bolesno.",hu:"A gyermekem beteg.",ma:"ولدي مريض."},
+  {de:"Wo ist das nächste Krankenhaus?",tr:"En yakın hastane nerede?",en:"Where is the nearest hospital?",fr:"Où est l'hôpital le plus proche ?",it:"Dov'è l'ospedale più vicino?",es:"¿Dónde está el hospital más cercano?",pl:"Gdzie jest najbliższy szpital?",zh:"最近的医院在哪里？",ro:"Unde este cel mai apropiat spital?",da:"Hvor er det nærmeste hospital?",sv:"Var ligger närmaste sjukhus?",fi:"Missä on lähin sairaala?",no:"Hvor er nærmeste sykehus?",nl:"Waar is het dichtstbijzijnde ziekenhuis?",hr:"Gdje je najbliža bolnica?",hu:"Hol van a legközelebbi kórház?",ma:"فين كاين أقرب سبيطار؟"},
+  {de:"Wo ist die nächste Apotheke?",tr:"En yakın eczane nerede?",en:"Where is the nearest pharmacy?",fr:"Où est la pharmacie la plus proche ?",it:"Dov'è la farmacia più vicina?",es:"¿Dónde está la farmacia más cercana?",pl:"Gdzie jest najbliższa apteka?",zh:"最近的药店在哪里？",ro:"Unde este cea mai apropiată farmacie?",da:"Hvor er det nærmeste apotek?",sv:"Var ligger närmaste apotek?",fi:"Missä on lähin apteekki?",no:"Hvor er nærmeste apotek?",nl:"Waar is de dichtstbijzijnde apotheek?",hr:"Gdje je najbliža ljekarna?",hu:"Hol van a legközelebbi gyógyszertár?",ma:"فين كاينة أقرب فرمسيان؟"},
+  {de:"Ich habe hier Schmerzen.",tr:"Buram ağrıyor.",en:"It hurts here.",fr:"J'ai mal ici.",it:"Mi fa male qui.",es:"Me duele aquí.",pl:"Boli mnie tutaj.",zh:"我这里疼。",ro:"Mă doare aici.",da:"Det gør ondt her.",sv:"Det gör ont här.",fi:"Tähän sattuu.",no:"Det gjør vondt her.",nl:"Het doet hier pijn.",hr:"Ovdje me boli.",hu:"Itt fáj.",ma:"كيضرني هنا."},
+  {de:"Ich habe eine Allergie.",tr:"Alerjim var.",en:"I have an allergy.",fr:"J'ai une allergie.",it:"Ho un'allergia.",es:"Tengo una alergia.",pl:"Mam alergię.",zh:"我有过敏症。",ro:"Am o alergie.",da:"Jeg har en allergi.",sv:"Jag har en allergi.",fi:"Minulla on allergia.",no:"Jeg har en allergi.",nl:"Ik heb een allergie.",hr:"Imam alergiju.",hu:"Allergiás vagyok.",ma:"عندي الحساسية."},
+  {de:"Ich habe mich verlaufen.",tr:"Kayboldum.",en:"I am lost.",fr:"Je suis perdu.",it:"Mi sono perso.",es:"Estoy perdido.",pl:"Zgubiłem się.",zh:"我迷路了。",ro:"M-am rătăcit.",da:"Jeg er faret vild.",sv:"Jag har gått vilse.",fi:"Olen eksynyt.",no:"Jeg har gått meg vill.",nl:"Ik ben verdwaald.",hr:"Izgubio sam se.",hu:"Eltévedtem.",ma:"تلفت."},
+  {de:"Man hat mir mein Portemonnaie gestohlen.",tr:"Cüzdanım çalındı.",en:"My wallet has been stolen.",fr:"On m'a volé mon portefeuille.",it:"Mi hanno rubato il portafoglio.",es:"Me han robado la cartera.",pl:"Ukradziono mi portfel.",zh:"我的钱包被偷了。",ro:"Mi s-a furat portofelul.",da:"Min pung er blevet stjålet.",sv:"Min plånbok har blivit stulen.",fi:"Lompakkoni on varastettu.",no:"Lommeboken min er stjålet.",nl:"Mijn portemonnee is gestolen.",hr:"Ukraden mi je novčanik.",hu:"Ellopták a pénztárcámat.",ma:"سرقو ليا البزطام."},
+  {de:"Sprechen Sie Deutsch oder Englisch?",tr:"Almanca ya da İngilizce konuşuyor musunuz?",en:"Do you speak German or English?",fr:"Parlez-vous allemand ou anglais ?",it:"Parla tedesco o inglese?",es:"¿Habla alemán o inglés?",pl:"Czy mówi Pan po niemiecku albo po angielsku?",zh:"您会说德语或英语吗？",ro:"Vorbiți germană sau engleză?",da:"Taler du tysk eller engelsk?",sv:"Talar du tyska eller engelska?",fi:"Puhutteko saksaa tai englantia?",no:"Snakker du tysk eller engelsk?",nl:"Spreekt u Duits of Engels?",hr:"Govorite li njemački ili engleski?",hu:"Beszél németül vagy angolul?",ma:"واش كتهضر الألمانية ولا الإنجليزية؟"},
+  {de:"Bitte sprechen Sie langsam.",tr:"Lütfen yavaş konuşun.",en:"Please speak slowly.",fr:"Parlez lentement, s'il vous plaît.",it:"Parli lentamente, per favore.",es:"Hable despacio, por favor.",pl:"Proszę mówić wolno.",zh:"请说慢一点。",ro:"Vă rog să vorbiți mai rar.",da:"Tal venligst langsomt.",sv:"Snälla, prata långsamt.",fi:"Puhukaa hitaasti, kiitos.",no:"Vennligst snakk sakte.",nl:"Spreek alstublieft langzaam.",hr:"Molim vas, govorite polako.",hu:"Kérem, beszéljen lassan.",ma:"عافاك هضر بشوية."},
+  {de:"Ich verstehe nicht.",tr:"Anlamıyorum.",en:"I don't understand.",fr:"Je ne comprends pas.",it:"Non capisco.",es:"No entiendo.",pl:"Nie rozumiem.",zh:"我听不懂。",ro:"Nu înțeleg.",da:"Jeg forstår ikke.",sv:"Jag förstår inte.",fi:"En ymmärrä.",no:"Jeg forstår ikke.",nl:"Ik begrijp het niet.",hr:"Ne razumijem.",hu:"Nem értem.",ma:"ما فهمتش."},
+  {de:"Bringen Sie mich bitte zu dieser Adresse.",tr:"Lütfen beni bu adrese götürün.",en:"Please take me to this address.",fr:"Emmenez-moi à cette adresse, s'il vous plaît.",it:"Mi porti a questo indirizzo, per favore.",es:"Lléveme a esta dirección, por favor.",pl:"Proszę mnie zawieźć pod ten adres.",zh:"请带我去这个地址。",ro:"Vă rog să mă duceți la această adresă.",da:"Kør mig venligst til denne adresse.",sv:"Kör mig till den här adressen, tack.",fi:"Viekää minut tähän osoitteeseen, kiitos.",no:"Vennligst kjør meg til denne adressen.",nl:"Breng me alstublieft naar dit adres.",hr:"Molim vas, odvezite me na ovu adresu.",hu:"Kérem, vigyen el erre a címre.",ma:"عافاك ديني لهاد العنوان."},
+  {de:"Wo ist die Toilette?",tr:"Tuvalet nerede?",en:"Where is the toilet?",fr:"Où sont les toilettes ?",it:"Dov'è il bagno?",es:"¿Dónde está el baño?",pl:"Gdzie jest toaleta?",zh:"洗手间在哪里？",ro:"Unde este toaleta?",da:"Hvor er toilettet?",sv:"Var är toaletten?",fi:"Missä on vessa?",no:"Hvor er toalettet?",nl:"Waar is het toilet?",hr:"Gdje je WC?",hu:"Hol van a mosdó?",ma:"فين كاين بيت الما؟"},
+  {de:"Ich brauche Wasser.",tr:"Suya ihtiyacım var.",en:"I need water.",fr:"J'ai besoin d'eau.",it:"Ho bisogno di acqua.",es:"Necesito agua.",pl:"Potrzebuję wody.",zh:"我需要水。",ro:"Am nevoie de apă.",da:"Jeg har brug for vand.",sv:"Jag behöver vatten.",fi:"Tarvitsen vettä.",no:"Jeg trenger vann.",nl:"Ik heb water nodig.",hr:"Trebam vode.",hu:"Vízre van szükségem.",ma:"محتاج الما."},
+  {de:"Wie viel kostet das?",tr:"Bu ne kadar?",en:"How much does this cost?",fr:"Combien ça coûte ?",it:"Quanto costa?",es:"¿Cuánto cuesta?",pl:"Ile to kosztuje?",zh:"这个多少钱？",ro:"Cât costă?",da:"Hvad koster det?",sv:"Vad kostar det?",fi:"Paljonko tämä maksaa?",no:"Hva koster det?",nl:"Hoeveel kost dit?",hr:"Koliko ovo košta?",hu:"Mennyibe kerül?",ma:"بشحال هادا؟"},
+  {de:"Danke für Ihre Hilfe!",tr:"Yardımınız için teşekkür ederim!",en:"Thank you for your help!",fr:"Merci pour votre aide !",it:"Grazie per il suo aiuto!",es:"¡Gracias por su ayuda!",pl:"Dziękuję za pomoc!",zh:"谢谢您的帮助！",ro:"Mulțumesc pentru ajutor!",da:"Tak for hjælpen!",sv:"Tack för hjälpen!",fi:"Kiitos avusta!",no:"Takk for hjelpen!",nl:"Bedankt voor uw hulp!",hr:"Hvala na pomoći!",hu:"Köszönöm a segítséget!",ma:"شكرا بزاف على المعاونة!"}
 ];
 
 const $ = id => document.getElementById(id);
@@ -215,6 +239,12 @@ function netState(){
   $("net").className = "net " + (on ? "on" : "off");
 }
 addEventListener("online", netState); addEventListener("offline", netState); netState();
+
+
+// ---------- Hell / Dunkel ----------
+function applyTheme(t){ document.documentElement.dataset.theme=t; $("theme").textContent = t==="light" ? "🌙" : "☀️"; $("theme").title = t==="light" ? "Dunkel" : "Hell"; const m=document.querySelector('meta[name=theme-color]'); if(m) m.content = t==="light" ? "#f3f6fc" : "#0f1729"; }
+applyTheme(store.get("theme","dark"));
+$("theme").onclick = ()=>{ const t = document.documentElement.dataset.theme==="light" ? "dark" : "light"; store.set("theme",t); applyTheme(t); };
 
 // ---------- Sprachauswahl ----------
 function fillSel(sel, val){
@@ -306,7 +336,7 @@ async function correct(text, lang){
 
 // ---------- Übersetzung (MyMemory) ----------
 async function translate(text, src, dst){
-  const url = "https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+src+"|"+dst;
+  const url = "https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+LANG[src].api+"|"+LANG[dst].api;
   const r = await fetch(url,{signal:ctrl.signal});
   if(!r.ok) throw new Error("http");
   const j = await r.json();
@@ -329,7 +359,7 @@ function cacheSet(src,dst,text,res){
   store.set("cache",c);
 }
 function phraseLookup(src,dst,text){
-  const norm = s=>s.toLowerCase().replace(/[!?.¡¿,]/g,"").trim();
+  const norm = s=>s.toLowerCase().replace(/[!?.¡¿,！？。，،؟]/g,"").trim();
   const p = PHR.find(x=>x[src] && norm(x[src])===norm(text));
   return p ? p[dst] : null;
 }
@@ -455,7 +485,7 @@ $("smClose").onclick = ()=>{ $("showMode").classList.remove("on"); try{speechSyn
 // ---------- Notfall ----------
 function renderPhr(){
   const l = $("sosLang").value;
-  $("phr").innerHTML = PHR.map((p,i)=>`<button class="${p.sos?'sos':''}" data-i="${i}">${p.sos?'🚨 ':''}${p.de}<span class="t">${LANG[l].f} ${p[l]}</span></button>`).join("");
+  $("phr").innerHTML = PHR.map((p,i)=>`<button class="${p.sos?'sos':''}" data-i="${i}">${p.sos?'🚨 ':''}${p.de}<span class="t" dir="auto">${LANG[l].f} ${p[l]}</span></button>`).join("");
   $("phr").querySelectorAll("button").forEach(b=>{
     b.onclick = ()=>{ const p=PHR[+b.dataset.i]; openShow(p.de, p[l], l); speak(p[l], l); };
   });
@@ -472,7 +502,7 @@ function addHist(e){
 function renderHist(){
   const h = store.get("hist",[]);
   if(!h.length){ $("hist").innerHTML='<li class="small" style="cursor:default">Noch keine Übersetzungen.</li>'; return; }
-  $("hist").innerHTML = h.map((x,i)=>`<li data-i="${i}"><div class="a">${LANG[x.src].f} ${esc(x.a)}</div><div class="b">${LANG[x.dst].f} ${esc(x.b)}</div><div class="m">${new Date(x.t).toLocaleString("de-DE",{dateStyle:"short",timeStyle:"short"})} · antippen zum Zeigen</div></li>`).join("");
+  $("hist").innerHTML = h.map((x,i)=>`<li data-i="${i}"><div class="a">${LANG[x.src].f} ${esc(x.a)}</div><div class="b" dir="auto">${LANG[x.dst].f} ${esc(x.b)}</div><div class="m">${new Date(x.t).toLocaleString("de-DE",{dateStyle:"short",timeStyle:"short"})} · antippen zum Zeigen</div></li>`).join("");
   $("hist").querySelectorAll("li[data-i]").forEach(li=>{
     li.onclick = ()=>{ const x=h[+li.dataset.i]; openShow(x.a, x.b, x.dst); speak(x.b, x.dst); };
   });
