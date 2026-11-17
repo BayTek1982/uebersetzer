@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f1729">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Übersetzer">
+<title>Bayazit Übersetzer</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>
+:root{
+  --bg:#0f1729;--card:#18223a;--card2:#1f2b48;--line:#2c3a5c;--txt:#eef2fb;--mut:#9aa8c7;
+  --acc:#3b82f6;--acc2:#60a5fa;--ok:#22c55e;--okbg:#0f2e1d;--warn:#f59e0b;--red:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:720px;margin:0 auto;padding:14px 14px 40px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+header .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:grid;place-items:center;font-size:22px}
+header h1{font-size:20px;font-weight:700}
+header small{display:block;color:var(--mut);font-size:12px;font-weight:400}
+.tabs{display:flex;gap:6px;background:var(--card);padding:5px;border-radius:14px;margin-bottom:14px}
+.tabs button{flex:1;border:0;background:none;color:var(--mut);padding:10px 6px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.tabs button.on{background:var(--acc);color:#fff}
+.langbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.langbar select{flex:1;appearance:none;-webkit-appearance:none;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px;font-weight:600;cursor:pointer}
+.swap{width:46px;height:46px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--card2);color:var(--acc2);font-size:20px;cursor:pointer}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px}
+.box .lbl{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+textarea{width:100%;min-height:120px;resize:vertical;background:transparent;border:0;color:var(--txt);font-size:19px;line-height:1.45;font-family:inherit;outline:none}
+textarea::placeholder{color:#5d6b8c}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:11px 14px;font-size:15px;font-weight:600;cursor:pointer;background:var(--card2);color:var(--txt);display:inline-flex;align-items:center;gap:6px}
+.btn.p{background:var(--acc);color:#fff}
+.btn.big{padding:14px 18px;font-size:16px}
+.btn:disabled{opacity:.45;cursor:default}
+.mic{width:58px;height:58px;border-radius:50%;border:0;background:var(--acc);color:#fff;font-size:26px;cursor:pointer;flex:none}
+.mic.rec{background:var(--red);animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}100%{box-shadow:0 0 0 18px rgba(239,68,68,0)}}
+.fix{background:var(--okbg);border:1px solid #1f6b3e;border-radius:12px;padding:10px 12px;margin-top:8px;font-size:14px;display:none}
+.fix.show{display:block}
+.fix b{color:var(--ok)}
+.fix .better{font-size:17px;margin:6px 0;color:#d6f5e1}
+.out{font-size:22px;line-height:1.45;min-height:60px;white-space:pre-wrap;word-wrap:break-word}
+.out.empty{color:#5d6b8c;font-size:17px}
+.pron{color:var(--acc2);font-size:15px;margin-top:6px;font-style:italic;display:none}
+.status{font-size:13px;color:var(--mut);min-height:18px;margin:4px 2px 8px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--acc2);border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);cursor:pointer;user-select:none}
+.toggle input{width:18px;height:18px;accent-color:var(--acc)}
+.hint{font-size:13px;color:var(--mut);background:var(--card2);border-radius:10px;padding:8px 10px;margin-top:8px;display:none}
+.banner{background:#3a2a0b;border:1px solid #7a5512;color:#fcd9a0;border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:10px;display:none}
+.phr{display:grid;grid-template-columns:1fr;gap:8px}
+.phr button{text-align:left;background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;cursor:pointer;font-size:15px}
+.phr button .t{display:block;color:var(--acc2);font-size:17px;margin-top:3px}
+.phr button.sos{border-color:#7a2020;background:#2a1418}
+.hist{list-style:none}
+.hist li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.hist .a{color:var(--mut);font-size:14px}
+.hist .b{font-size:16px;margin-top:3px}
+.hist .m{font-size:11px;color:#5d6b8c;margin-top:4px}
+.show-mode{position:fixed;inset:0;background:#fff;color:#111;display:none;flex-direction:column;justify-content:center;align-items:center;padding:24px;z-index:50;text-align:center}
+.show-mode.on{display:flex}
+.show-mode .s1{font-size:16px;color:#666;margin-bottom:14px}
+.show-mode .s2{font-size:clamp(30px,8vw,64px);font-weight:700;line-height:1.25}
+.show-mode .s3{font-size:18px;color:#3b5bdb;margin-top:16px;font-style:italic}
+.show-mode .bar{position:absolute;bottom:24px;display:flex;gap:10px}
+.show-mode .bar button{border:0;border-radius:12px;padding:14px 20px;font-size:16px;font-weight:600;cursor:pointer;background:#e8ecf5;color:#111}
+.show-mode .bar button.p{background:#3b82f6;color:#fff}
+.hidden{display:none!important}
+.small{font-size:12px;color:var(--mut)}
+
+.net{font-size:12px;padding:4px 10px;border-radius:20px;margin-left:auto;font-weight:600}
+.net.on{background:#0f2e1d;color:#4ade80}
+.net.off{background:#3a1414;color:#fca5a5}
+.ki{display:block;text-align:center;margin-top:12px;padding:12px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">🌍</div>
+    <h1>Bayazit Übersetzer<small>Sprechen oder tippen · korrigiert automatisch · 7 Sprachen</small></h1>
+    <span class="net on" id="net">● Online</span>
+  </header>
+
+  <div class="tabs">
+    <button class="on" data-tab="t-main">🗣️ Übersetzen</button>
+    <button data-tab="t-sos">🆘 Notfall</button>
+    <button data-tab="t-hist">🕘 Verlauf</button>
+  </div>
+
+  <div id="banner" class="banner"></div>
+
+  <section id="t-main">
+    <div class="langbar">
+      <select id="src"></select>
+      <button class="swap" id="swap" title="Sprachen tauschen">⇄</button>
+      <select id="dst"></select>
+    </div>
+
+    <div class="box">
+      <div class="lbl"><span id="srcLbl">Deine Eingabe</span>
+        <label class="toggle"><input type="checkbox" id="autoFix" checked> Automatisch korrigieren</label>
+      </div>
+      <textarea id="inp" placeholder="Hier tippen oder aufs Mikrofon drücken …"></textarea>
+      <div class="row" style="justify-content:space-between;margin-top:6px">
+        <div class="row">
+          <button class="mic" id="mic" title="Sprechen">🎤</button>
+          <button class="btn" id="clear">✖ Leeren</button>
+        </div>
+        <button class="btn p big" id="go">Übersetzen ➜</button>
+      </div>
+      <div class="hint" id="micHint">🎤 Dein Browser unterstützt die Spracheingabe hier nicht. Tippe einfach auf das <b>Mikrofon deiner Handy-Tastatur</b>.</div>
+      <div class="fix" id="fix">
+        <b>✨ Korrigiert</b> <span id="fixNote"></span>
+        <div class="better" id="fixText"></div>
+        <div class="row">
+          <button class="btn" id="fixUse">Übernehmen</button>
+          <button class="btn" id="fixUndo">↩ Rückgängig</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="box">
+      <div class="lbl"><span id="dstLbl">Übersetzung</span></div>
+      <div class="out empty" id="out">Die Übersetzung erscheint hier.</div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn p" id="speak">🔊 Vorlesen</button>
+        <button class="btn" id="copy">📋 Kopieren</button>
+        <button class="btn" id="show">🔍 Groß zeigen</button>
+      </div>
+    </div>
+    <a class="ki" href="https://claude.ai/artifact/1A7iEqZPRUG9ZZuPUV78tu" target="_blank" rel="noopener">✨ KI-Version: noch schöner formulieren (mit Claude)</a>
+    <p class="small" style="margin-top:10px">Ohne Internet funktionieren: Notfall-Sätze, Verlauf und schon übersetzte Sätze. Vorlesen klappt offline, wenn das Handy die Stimme installiert hat.</p>
+  </section>
+
+  <section id="t-sos" class="hidden">
+    <div class="langbar">
+      <span class="small" style="flex:none">Sprache:</span>
+      <select id="sosLang"></select>
+    </div>
+    <p class="small" style="margin-bottom:10px">Antippen = groß zeigen und vorlesen. Funktioniert auch ohne Internet.</p>
+    <div class="phr" id="phr"></div>
+  </section>
+
+  <section id="t-hist" class="hidden">
+    <ul class="hist" id="hist"></ul>
+    <button class="btn" id="histClear">🗑 Verlauf löschen</button>
+  </section>
+</div>
+
+<div class="show-mode" id="showMode">
+  <div class="s1" id="sm1"></div>
+  <div class="s2" id="sm2"></div>
+  <div class="s3" id="sm3"></div>
+  <div class="bar">
+    <button class="p" id="smSpeak">🔊 Vorlesen</button>
+    <button id="smClose">Schließen</button>
+  </div>
+</div>
+
+<script>
+const LANG = {
+  de:{n:"Deutsch",f:"🇩🇪",v:"de-DE",lt:"de-DE"},
+  tr:{n:"Türkisch",f:"🇹🇷",v:"tr-TR",lt:null},
+  en:{n:"Englisch",f:"🇬🇧",v:"en-GB",lt:"en-GB"},
+  fr:{n:"Französisch",f:"🇫🇷",v:"fr-FR",lt:"fr"},
+  it:{n:"Italienisch",f:"🇮🇹",v:"it-IT",lt:"it"},
+  es:{n:"Spanisch",f:"🇪🇸",v:"es-ES",lt:"es"},
+  pl:{n:"Polnisch",f:"🇵🇱",v:"pl-PL",lt:"pl-PL"}
+};
+const PHR = [
+  {sos:1,de:"Hilfe!",tr:"İmdat!",en:"Help!",fr:"Au secours !",it:"Aiuto!",es:"¡Socorro!",pl:"Pomocy!"},
+  {sos:1,de:"Ich brauche einen Arzt.",tr:"Bir doktora ihtiyacım var.",en:"I need a doctor.",fr:"J'ai besoin d'un médecin.",it:"Ho bisogno di un medico.",es:"Necesito un médico.",pl:"Potrzebuję lekarza."},
+  {sos:1,de:"Bitte rufen Sie einen Krankenwagen.",tr:"Lütfen bir ambulans çağırın.",en:"Please call an ambulance.",fr:"Appelez une ambulance, s'il vous plaît.",it:"Chiami un'ambulanza, per favore.",es:"Llame a una ambulancia, por favor.",pl:"Proszę wezwać karetkę."},
+  {sos:1,de:"Rufen Sie die Polizei!",tr:"Polisi arayın!",en:"Call the police!",fr:"Appelez la police !",it:"Chiami la polizia!",es:"¡Llame a la policía!",pl:"Proszę wezwać policję!"},
+  {sos:1,de:"Ich hatte einen Unfall.",tr:"Kaza geçirdim.",en:"I had an accident.",fr:"J'ai eu un accident.",it:"Ho avuto un incidente.",es:"He tenido un accidente.",pl:"Miałem wypadek."},
+  {sos:1,de:"Mein Kind ist krank.",tr:"Çocuğum hasta.",en:"My child is sick.",fr:"Mon enfant est malade.",it:"Mio figlio è malato.",es:"Mi hijo está enfermo.",pl:"Moje dziecko jest chore."},
+  {de:"Wo ist das nächste Krankenhaus?",tr:"En yakın hastane nerede?",en:"Where is the nearest hospital?",fr:"Où est l'hôpital le plus proche ?",it:"Dov'è l'ospedale più vicino?",es:"¿Dónde está el hospital más cercano?",pl:"Gdzie jest najbliższy szpital?"},
+  {de:"Wo ist die nächste Apotheke?",tr:"En yakın eczane nerede?",en:"Where is the nearest pharmacy?",fr:"Où est la pharmacie la plus proche ?",it:"Dov'è la farmacia più vicina?",es:"¿Dónde está la farmacia más cercana?",pl:"Gdzie jest najbliższa apteka?"},
+  {de:"Ich habe hier Schmerzen.",tr:"Buram ağrıyor.",en:"It hurts here.",fr:"J'ai mal ici.",it:"Mi fa male qui.",es:"Me duele aquí.",pl:"Boli mnie tutaj."},
+  {de:"Ich habe eine Allergie.",tr:"Alerjim var.",en:"I have an allergy.",fr:"J'ai une allergie.",it:"Ho un'allergia.",es:"Tengo una alergia.",pl:"Mam alergię."},
+  {de:"Ich habe mich verlaufen.",tr:"Kayboldum.",en:"I am lost.",fr:"Je suis perdu.",it:"Mi sono perso.",es:"Estoy perdido.",pl:"Zgubiłem się."},
+  {de:"Man hat mir mein Portemonnaie gestohlen.",tr:"Cüzdanım çalındı.",en:"My wallet has been stolen.",fr:"On m'a volé mon portefeuille.",it:"Mi hanno rubato il portafoglio.",es:"Me han robado la cartera.",pl:"Ukradziono mi portfel."},
+  {de:"Sprechen Sie Deutsch oder Englisch?",tr:"Almanca ya da İngilizce konuşuyor musunuz?",en:"Do you speak German or English?",fr:"Parlez-vous allemand ou anglais ?",it:"Parla tedesco o inglese?",es:"¿Habla alemán o inglés?",pl:"Czy mówi Pan po niemiecku albo po angielsku?"},
+  {de:"Bitte sprechen Sie langsam.",tr:"Lütfen yavaş konuşun.",en:"Please speak slowly.",fr:"Parlez lentement, s'il vous plaît.",it:"Parli lentamente, per favore.",es:"Hable despacio, por favor.",pl:"Proszę mówić wolno."},
+  {de:"Ich verstehe nicht.",tr:"Anlamıyorum.",en:"I don't understand.",fr:"Je ne comprends pas.",it:"Non capisco.",es:"No entiendo.",pl:"Nie rozumiem."},
+  {de:"Bringen Sie mich bitte zu dieser Adresse.",tr:"Lütfen beni bu adrese götürün.",en:"Please take me to this address.",fr:"Emmenez-moi à cette adresse, s'il vous plaît.",it:"Mi porti a questo indirizzo, per favore.",es:"Lléveme a esta dirección, por favor.",pl:"Proszę mnie zawieźć pod ten adres."},
+  {de:"Wo ist die Toilette?",tr:"Tuvalet nerede?",en:"Where is the toilet?",fr:"Où sont les toilettes ?",it:"Dov'è il bagno?",es:"¿Dónde está el baño?",pl:"Gdzie jest toaleta?"},
+  {de:"Ich brauche Wasser.",tr:"Suya ihtiyacım var.",en:"I need water.",fr:"J'ai besoin d'eau.",it:"Ho bisogno di acqua.",es:"Necesito agua.",pl:"Potrzebuję wody."},
+  {de:"Wie viel kostet das?",tr:"Bu ne kadar?",en:"How much does this cost?",fr:"Combien ça coûte ?",it:"Quanto costa?",es:"¿Cuánto cuesta?",pl:"Ile to kosztuje?"},
+  {de:"Danke für Ihre Hilfe!",tr:"Yardımınız için teşekkür ederim!",en:"Thank you for your help!",fr:"Merci pour votre aide !",it:"Grazie per il suo aiuto!",es:"¡Gracias por su ayuda!",pl:"Dziękuję za pomoc!"}
+];
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k,d){try{const v=localStorage.getItem("bu_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("bu_"+k,JSON.stringify(v))}catch(e){}}
+};
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function decode(s){ const t=document.createElement("textarea"); t.innerHTML=s; return t.value; }
+function setStatus(html){ $("status").innerHTML = html; }
+
+// ---------- Online / Offline ----------
+function netState(){
+  const on = navigator.onLine;
+  $("net").textContent = on ? "● Online" : "● Offline";
+  $("net").className = "net " + (on ? "on" : "off");
+}
+addEventListener("online", netState); addEventListener("offline", netState); netState();
+
+// ---------- Sprachauswahl ----------
+function fillSel(sel, val){
+  sel.innerHTML = Object.entries(LANG).map(([k,l])=>`<option value="${k}">${l.f} ${l.n}</option>`).join("");
+  sel.value = val;
+}
+fillSel($("src"), store.get("src","de"));
+fillSel($("dst"), store.get("dst","tr"));
+fillSel($("sosLang"), store.get("sos","tr"));
+$("autoFix").checked = store.get("autoFix", true);
+
+function labels(){
+  $("srcLbl").textContent = "Deine Eingabe · " + LANG[$("src").value].n;
+  $("dstLbl").textContent = "Übersetzung · " + LANG[$("dst").value].n;
+}
+labels();
+function langChanged(changed){
+  if($("src").value===$("dst").value){
+    const other = changed==="src" ? "dst" : "src";
+    $(other).value = $(changed).value==="de" ? "tr" : "de";
+  }
+  store.set("src",$("src").value); store.set("dst",$("dst").value); labels(); lastKey=""; schedule(0);
+}
+$("src").onchange = ()=>langChanged("src");
+$("dst").onchange = ()=>langChanged("dst");
+$("autoFix").onchange = ()=> store.set("autoFix",$("autoFix").checked);
+
+// ---------- Tabs ----------
+document.querySelectorAll(".tabs button").forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));
+    ["t-main","t-sos","t-hist"].forEach(id=>$(id).classList.toggle("hidden", id!==b.dataset.tab));
+    if(b.dataset.tab==="t-hist") renderHist();
+  };
+});
+
+// ---------- Spracheingabe ----------
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec=null, recOn=false, dictBase="";
+if(!SR){ $("micHint").style.display="block"; }
+$("mic").onclick = ()=>{
+  if(!SR){ $("micHint").style.display="block"; $("inp").focus(); return; }
+  if(recOn){ try{rec.stop()}catch(e){} return; }
+  if(!navigator.onLine){ setStatus("Spracheingabe braucht Internet – bitte tippen."); }
+  rec = new SR();
+  rec.lang = LANG[$("src").value].v;
+  rec.interimResults = true;
+  rec.continuous = false;
+  dictBase = $("inp").value.trim();
+  rec.onresult = e=>{
+    let fin="", tmp="";
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal) fin+=t; else tmp+=t;
+    }
+    if(fin){ dictBase=(dictBase+" "+fin).trim(); }
+    $("inp").value=(dictBase+" "+tmp).trim();
+  };
+  rec.onstart = ()=>{ recOn=true; $("mic").classList.add("rec"); $("mic").textContent="⏹"; setStatus("🎤 Ich höre zu … sprich jetzt."); };
+  rec.onerror = e=>{
+    if(e.error==="not-allowed") setStatus("Mikrofon nicht erlaubt – bitte in den Browser-Einstellungen erlauben.");
+    else if(e.error==="no-speech") setStatus("Nichts gehört – nochmal versuchen.");
+    else if(e.error==="network") setStatus("Spracheingabe braucht Internet.");
+  };
+  rec.onend = ()=>{
+    recOn=false; $("mic").classList.remove("rec"); $("mic").textContent="🎤";
+    if($("status").textContent.startsWith("🎤")) setStatus("");
+    if($("inp").value.trim()){ lastKey=""; schedule(0); }
+  };
+  try{ rec.start(); }catch(e){ setStatus("Spracheingabe konnte nicht starten."); }
+};
+
+// ---------- Korrektur (LanguageTool) ----------
+async function correct(text, lang){
+  const code = LANG[lang].lt;
+  if(!code) return {text, n:0};
+  const body = new URLSearchParams({text, language:code});
+  const r = await fetch("https://api.languagetool.org/v2/check",{method:"POST",body,signal:ctrl.signal});
+  if(!r.ok) return {text, n:0};
+  const j = await r.json();
+  const ms = (j.matches||[]).filter(m=>m.replacements && m.replacements.length).sort((a,b)=>b.offset-a.offset);
+  let out=text, n=0;
+  for(const m of ms){
+    out = out.slice(0,m.offset) + m.replacements[0].value + out.slice(m.offset+m.length);
+    n++;
+  }
+  return {text:out, n};
+}
+
+// ---------- Übersetzung (MyMemory) ----------
+async function translate(text, src, dst){
+  const url = "https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+src+"|"+dst;
+  const r = await fetch(url,{signal:ctrl.signal});
+  if(!r.ok) throw new Error("http");
+  const j = await r.json();
+  let t = j && j.responseData && j.responseData.translatedText;
+  if(!t || /MYMEMORY WARNING|QUERY LENGTH LIMIT|INVALID LANGUAGE/i.test(t)){
+    const e = new Error("quota"); e.quota = /WARNING/i.test(t||""); throw e;
+  }
+  return decode(t);
+}
+
+function cacheGet(src,dst,text){
+  const c = store.get("cache",{});
+  return c[src+"|"+dst+"|"+text.toLowerCase()];
+}
+function cacheSet(src,dst,text,res){
+  const c = store.get("cache",{});
+  c[src+"|"+dst+"|"+text.toLowerCase()] = res;
+  const keys = Object.keys(c);
+  if(keys.length>400) delete c[keys[0]];
+  store.set("cache",c);
+}
+function phraseLookup(src,dst,text){
+  const norm = s=>s.toLowerCase().replace(/[!?.¡¿,]/g,"").trim();
+  const p = PHR.find(x=>x[src] && norm(x[src])===norm(text));
+  return p ? p[dst] : null;
+}
+
+let timer=null, ctrl=null, lastKey="", reqNo=0, undoText="", pendingBetter="";
+$("inp").addEventListener("input", ()=>{ $("fix").classList.remove("show"); schedule(1300); });
+$("go").onclick = ()=>{ lastKey=""; schedule(0); };
+$("clear").onclick = ()=>{
+  $("inp").value=""; dictBase=""; $("fix").classList.remove("show");
+  $("out").textContent="Die Übersetzung erscheint hier."; $("out").classList.add("empty");
+  setStatus(""); $("inp").focus();
+};
+function schedule(ms){ clearTimeout(timer); timer=setTimeout(run, ms); }
+
+async function run(){
+  const text = $("inp").value.trim();
+  if(!text){ setStatus(""); return; }
+  const src=$("src").value, dst=$("dst").value;
+  const key = src+"|"+dst+"|"+text;
+  if(key===lastKey) return;
+  lastKey = key;
+  if(ctrl) ctrl.abort();
+  ctrl = new AbortController();
+  const my = ++reqNo;
+
+  // offline: Gedächtnis + Notfall-Sätze
+  if(!navigator.onLine){
+    const hit = cacheGet(src,dst,text) || phraseLookup(src,dst,text);
+    if(hit){ showOut(hit); setStatus("📴 Offline – aus dem Gedächtnis."); }
+    else { setStatus("📴 Offline – dieser Satz ist noch nicht gespeichert. Nutze den Tab „🆘 Notfall“."); }
+    return;
+  }
+
+  setStatus('<span class="spin"></span>Korrigiere und übersetze …');
+  try{
+    let base = text, n = 0;
+    try{ const c = await correct(text, src); base = c.text; n = c.n; }catch(e){ if(e.name==="AbortError") return; }
+    if(my!==reqNo) return;
+    const changed = n>0 && base!==text;
+    $("fix").classList.remove("show");
+    if(changed){
+      $("fixNote").textContent = "· " + n + (n===1?" Fehler":" Fehler") + " verbessert";
+      if($("autoFix").checked && $("inp").value.trim()===text){
+        undoText = text; $("inp").value = base; dictBase = base;
+        lastKey = src+"|"+dst+"|"+base;
+        $("fixText").textContent = "Vorher: " + text;
+        $("fixUse").classList.add("hidden"); $("fixUndo").classList.remove("hidden");
+      }else{
+        pendingBetter = base; $("fixText").textContent = base;
+        $("fixUse").classList.remove("hidden"); $("fixUndo").classList.add("hidden");
+      }
+      $("fix").classList.add("show");
+    }
+    const tr = cacheGet(src,dst,base) || phraseLookup(src,dst,base) || await translate(base, src, dst);
+    if(my!==reqNo) return;
+    cacheSet(src,dst,base,tr);
+    showOut(tr);
+    addHist({src,dst,a:base,b:tr,t:Date.now()});
+    setStatus("");
+  }catch(e){
+    if(my!==reqNo || e.name==="AbortError") return;
+    lastKey="";
+    if(e.quota) setStatus("Das kostenlose Tageslimit ist erreicht. Nutze heute die KI-Version (Knopf unten).");
+    else setStatus("Übersetzung fehlgeschlagen – Internet prüfen und nochmal tippen.");
+  }
+}
+function showOut(t){ $("out").textContent=t; $("out").classList.remove("empty"); }
+
+$("fixUse").onclick = ()=>{
+  if(!pendingBetter) return;
+  undoText=$("inp").value; $("inp").value=pendingBetter; dictBase=pendingBetter;
+  lastKey=$("src").value+"|"+$("dst").value+"|"+pendingBetter; $("fix").classList.remove("show");
+};
+$("fixUndo").onclick = ()=>{
+  if(!undoText) return;
+  $("inp").value=undoText; dictBase=undoText;
+  lastKey=$("src").value+"|"+$("dst").value+"|"+undoText; $("fix").classList.remove("show");
+};
+$("swap").onclick = ()=>{
+  const s=$("src").value, d=$("dst").value;
+  $("src").value=d; $("dst").value=s; store.set("src",d); store.set("dst",s); labels();
+  if(!$("out").classList.contains("empty")){ $("inp").value=$("out").textContent; dictBase=$("inp").value; }
+  $("fix").classList.remove("show"); lastKey=""; schedule(0);
+};
+
+// ---------- Vorlesen ----------
+function pickVoice(code){
+  if(!("speechSynthesis" in window)) return null;
+  const vs = speechSynthesis.getVoices(), base = code.slice(0,2);
+  return vs.find(v=>v.lang===code) || vs.find(v=>v.lang && v.lang.replace("_","-").toLowerCase().startsWith(base)) || null;
+}
+if("speechSynthesis" in window){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){} }
+function speak(text, lang){
+  if(!text) return;
+  if(!("speechSynthesis" in window)){ setStatus("Vorlesen wird hier nicht unterstützt."); return; }
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice(LANG[lang].v);
+    if(v){ u.voice=v; u.lang=v.lang; } else { u.lang=LANG[lang].v; }
+    u.rate=0.92;
+    speechSynthesis.speak(u);
+  }catch(e){ setStatus("Vorlesen gerade nicht möglich."); }
+}
+$("speak").onclick = ()=>{ if(!$("out").classList.contains("empty")) speak($("out").textContent, $("dst").value); };
+$("copy").onclick = ()=>{
+  if($("out").classList.contains("empty")) return;
+  navigator.clipboard.writeText($("out").textContent).then(()=>setStatus("✅ Kopiert")).catch(()=>setStatus("Kopieren nicht möglich – Text lange antippen."));
+};
+
+// ---------- Groß zeigen ----------
+let smText="", smLang="de";
+function openShow(orig, text, lang){
+  smText=text; smLang=lang;
+  $("sm1").textContent = LANG[lang].f + " " + LANG[lang].n + (orig ? " · „" + orig + "“" : "");
+  $("sm2").textContent = text; $("sm3").textContent = "";
+  $("showMode").classList.add("on");
+}
+$("show").onclick = ()=>{ if(!$("out").classList.contains("empty")) openShow($("inp").value.trim(), $("out").textContent, $("dst").value); };
+$("smSpeak").onclick = ()=> speak(smText, smLang);
+$("smClose").onclick = ()=>{ $("showMode").classList.remove("on"); try{speechSynthesis.cancel()}catch(e){} };
+
+// ---------- Notfall ----------
+function renderPhr(){
+  const l = $("sosLang").value;
+  $("phr").innerHTML = PHR.map((p,i)=>`<button class="${p.sos?'sos':''}" data-i="${i}">${p.sos?'🚨 ':''}${p.de}<span class="t">${LANG[l].f} ${p[l]}</span></button>`).join("");
+  $("phr").querySelectorAll("button").forEach(b=>{
+    b.onclick = ()=>{ const p=PHR[+b.dataset.i]; openShow(p.de, p[l], l); speak(p[l], l); };
+  });
+}
+$("sosLang").onchange = ()=>{ store.set("sos",$("sosLang").value); renderPhr(); };
+renderPhr();
+
+// ---------- Verlauf ----------
+function addHist(e){
+  let h = store.get("hist",[]);
+  h = h.filter(x=>!(x.a===e.a && x.dst===e.dst));
+  h.unshift(e); store.set("hist",h.slice(0,50));
+}
+function renderHist(){
+  const h = store.get("hist",[]);
+  if(!h.length){ $("hist").innerHTML='<li class="small" style="cursor:default">Noch keine Übersetzungen.</li>'; return; }
+  $("hist").innerHTML = h.map((x,i)=>`<li data-i="${i}"><div class="a">${LANG[x.src].f} ${esc(x.a)}</div><div class="b">${LANG[x.dst].f} ${esc(x.b)}</div><div class="m">${new Date(x.t).toLocaleString("de-DE",{dateStyle:"short",timeStyle:"short"})} · antippen zum Zeigen</div></li>`).join("");
+  $("hist").querySelectorAll("li[data-i]").forEach(li=>{
+    li.onclick = ()=>{ const x=h[+li.dataset.i]; openShow(x.a, x.b, x.dst); speak(x.b, x.dst); };
+  });
+}
+$("histClear").onclick = ()=>{ store.set("hist",[]); renderHist(); };
+
+// ---------- Offline-Modus ----------
+if("serviceWorker" in navigator){
+  addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
