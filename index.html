@@ -91,6 +91,14 @@ textarea::placeholder{color:#5d6b8c}
 [data-theme=light] .net.off{background:#fdecec;color:#b91c1c}
 .theme{width:40px;height:40px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:19px;cursor:pointer;margin-left:auto}
 .net+.theme{margin-left:8px}
+
+.ctrl{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 10px;margin-bottom:10px}
+.ctrl .toggle{font-size:14px;color:var(--txt);font-weight:600}
+.btn.pz{background:#3a2a0b;color:#fcd34d;border:1px solid #7a5512}
+.btn.pz.on{background:#0f2e1d;color:#4ade80;border-color:#1f6b3e}
+[data-theme=light] .btn.pz{background:#fff4e0;color:#92400e;border-color:#f3c77a}
+[data-theme=light] .btn.pz.on{background:#e7f8ee;color:#15803d;border-color:#9fdcb7}
+.paused-tag{color:var(--warn);font-weight:600}
 </style>
 </head>
 <body>
@@ -117,6 +125,11 @@ textarea::placeholder{color:#5d6b8c}
       <select id="dst"></select>
     </div>
 
+    <div class="ctrl">
+      <label class="toggle"><input type="checkbox" id="instant" checked> ⚡ Sofort übersetzen</label>
+      <button class="btn pz" id="pause">⏸ Pause</button>
+    </div>
+
     <div class="box">
       <div class="lbl"><span id="srcLbl">Deine Eingabe</span>
         <label class="toggle"><input type="checkbox" id="autoFix" checked> Automatisch korrigieren</label>
@@ -126,6 +139,7 @@ textarea::placeholder{color:#5d6b8c}
         <div class="row">
           <button class="mic" id="mic" title="Sprechen">🎤</button>
           <button class="btn" id="clear">✖ Leeren</button>
+          <button class="btn" id="copyIn">📋 Text kopieren</button>
         </div>
         <button class="btn p big" id="go">Übersetzen ➜</button>
       </div>
@@ -136,6 +150,7 @@ textarea::placeholder{color:#5d6b8c}
         <div class="row">
           <button class="btn" id="fixUse">Übernehmen</button>
           <button class="btn" id="fixUndo">↩ Rückgängig</button>
+          <button class="btn" id="fixCopy">📋 Kopieren</button>
         </div>
       </div>
     </div>
@@ -266,7 +281,7 @@ function langChanged(changed){
     const other = changed==="src" ? "dst" : "src";
     $(other).value = $(changed).value==="de" ? "tr" : "de";
   }
-  store.set("src",$("src").value); store.set("dst",$("dst").value); labels(); lastKey=""; schedule(0);
+  store.set("src",$("src").value); store.set("dst",$("dst").value); labels(); lastKey=""; autoRun(0);
 }
 $("src").onchange = ()=>langChanged("src");
 $("dst").onchange = ()=>langChanged("dst");
@@ -312,7 +327,7 @@ $("mic").onclick = ()=>{
   rec.onend = ()=>{
     recOn=false; $("mic").classList.remove("rec"); $("mic").textContent="🎤";
     if($("status").textContent.startsWith("🎤")) setStatus("");
-    if($("inp").value.trim()){ lastKey=""; schedule(0); }
+    if($("inp").value.trim()){ lastKey=""; autoRun(0); }
   };
   try{ rec.start(); }catch(e){ setStatus("Spracheingabe konnte nicht starten."); }
 };
@@ -365,13 +380,46 @@ function phraseLookup(src,dst,text){
 }
 
 let timer=null, ctrl=null, lastKey="", reqNo=0, undoText="", pendingBetter="";
-$("inp").addEventListener("input", ()=>{ $("fix").classList.remove("show"); schedule(1300); });
+$("inp").addEventListener("input", ()=>{ $("fix").classList.remove("show"); autoRun(1300); });
 $("go").onclick = ()=>{ lastKey=""; schedule(0); };
 $("clear").onclick = ()=>{
   $("inp").value=""; dictBase=""; $("fix").classList.remove("show");
   $("out").textContent="Die Übersetzung erscheint hier."; $("out").classList.add("empty");
   setStatus(""); $("inp").focus();
 };
+// ---------- Sofort-Modus / Pause ----------
+let instant = store.get("instant", true), paused = false;
+function isAuto(){ return instant && !paused; }
+function autoRun(ms){
+  if(isAuto()){ schedule(ms); return; }
+  clearTimeout(timer);
+  if($("inp").value.trim()) setStatus('<span class="paused-tag">⏸ ' + (paused ? "Pausiert" : "Sofort-Übersetzen ist aus") + '</span> – tippe auf ' + (paused ? "„▶ Weiter“ oder " : "") + "„Übersetzen“.");
+}
+function pauseUI(){
+  $("instant").checked = instant;
+  $("pause").classList.toggle("hidden", !instant);
+  $("pause").classList.toggle("on", paused);
+  $("pause").textContent = paused ? "▶ Weiter" : "⏸ Pause";
+}
+$("instant").onchange = ()=>{
+  instant = $("instant").checked; store.set("instant", instant); paused = false; pauseUI();
+  if(instant){ lastKey=""; schedule(0); } else { clearTimeout(timer); setStatus("Sofort-Übersetzen aus – übersetzt nur noch mit dem Knopf „Übersetzen“."); }
+};
+$("pause").onclick = ()=>{
+  paused = !paused; pauseUI();
+  if(paused){ clearTimeout(timer); if(ctrl) ctrl.abort(); lastKey=""; setStatus('<span class="paused-tag">⏸ Pausiert</span> – schreib in Ruhe weiter, dann „▶ Weiter“.'); }
+  else { setStatus(""); lastKey=""; schedule(0); }
+};
+pauseUI();
+
+// ---------- Text kopieren ----------
+function copyText(t, okMsg){
+  t = (t||"").trim(); if(!t){ setStatus("Kein Text zum Kopieren."); return; }
+  navigator.clipboard.writeText(t).then(()=>setStatus("✅ " + okMsg)).catch(()=>setStatus("Kopieren nicht möglich – Text lange antippen und kopieren."));
+}
+$("copyIn").onclick = ()=> copyText($("inp").value, "Dein (verbesserter) Text ist kopiert – jetzt einfügen und versenden.");
+$("fixCopy").onclick = ()=> copyText($("fixUse").classList.contains("hidden") ? $("inp").value : pendingBetter, "Verbesserter Text kopiert.");
+
 function schedule(ms){ clearTimeout(timer); timer=setTimeout(run, ms); }
 
 async function run(){
@@ -442,7 +490,7 @@ $("swap").onclick = ()=>{
   const s=$("src").value, d=$("dst").value;
   $("src").value=d; $("dst").value=s; store.set("src",d); store.set("dst",s); labels();
   if(!$("out").classList.contains("empty")){ $("inp").value=$("out").textContent; dictBase=$("inp").value; }
-  $("fix").classList.remove("show"); lastKey=""; schedule(0);
+  $("fix").classList.remove("show"); lastKey=""; autoRun(0);
 };
 
 // ---------- Vorlesen ----------
